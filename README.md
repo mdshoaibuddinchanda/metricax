@@ -42,7 +42,7 @@ MetricaX is a world-class, production-ready mathematical toolkit designed for da
 pip install metricax
 
 # Install from source for latest features
-git clone https://github.com/metricax/metricax.git
+git clone https://github.com/mdshoaibuddinchanda/metricax.git
 cd metricax
 pip install -e .
 ```
