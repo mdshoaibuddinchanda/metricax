@@ -52,55 +52,54 @@ def optimal_code_length(p: List[float], base: float = 2.0) -> List[float]:
     return code_lengths
 
 
-def fano_inequality(h_x_given_y: float, error_prob: float, 
-                   alphabet_size: int, base: float = 2.0) -> float:
+def fano_inequality(conditional_entropy: float, alphabet_size: int, base: float = 2.0) -> float:
     """
-    Compute Fano's inequality lower bound on conditional entropy.
-    
-    H(X|Y) ≥ H(Pe) + Pe * log(|X| - 1)
-    
+    Compute Fano's inequality lower bound on error probability.
+
+    Pe ≥ (H(X|Y) - 1) / log(|X| - 1)
+
     where Pe is the error probability and |X| is alphabet size.
-    
+
     Args:
-        h_x_given_y: Observed conditional entropy H(X|Y)
-        error_prob: Error probability Pe ∈ [0, 1]
+        conditional_entropy: Conditional entropy H(X|Y)
         alphabet_size: Size of alphabet |X| ≥ 2
         base: Logarithm base
-        
+
     Returns:
         Lower bound on error probability
-        
+
     Raises:
         ValueError: If parameters are invalid
-        
+
     Examples:
         >>> # Perfect prediction (H(X|Y) = 0) implies Pe = 0
-        >>> fano_inequality(0.0, 0.0, 2)
+        >>> fano_inequality(0.0, 2)
         0.0
-        
+
         >>> # High conditional entropy implies high error probability
-        >>> fano_inequality(1.5, 0.3, 4)
-        0.3
+        >>> fano_inequality(1.5, 4)
+        0.5
     """
-    if not (0 <= error_prob <= 1):
-        raise ValueError("Error probability must be in [0, 1]")
     if alphabet_size < 2:
         raise ValueError("Alphabet size must be at least 2")
-    if h_x_given_y < 0:
+    if conditional_entropy < 0:
         raise ValueError("Conditional entropy must be non-negative")
-    
-    if error_prob == 0:
+
+    if conditional_entropy == 0:
         return 0.0
-    if error_prob == 1:
-        return safe_log(alphabet_size, base)
-    
-    # Binary entropy of error probability
-    h_pe = -error_prob * safe_log(error_prob, base) - (1 - error_prob) * safe_log(1 - error_prob, base)
-    
-    # Fano bound: H(X|Y) ≥ H(Pe) + Pe * log(|X| - 1)
-    fano_bound = h_pe + error_prob * safe_log(alphabet_size - 1, base)
-    
-    return fano_bound
+
+    # Fano bound: Pe ≥ (H(X|Y) - 1) / log(|X| - 1)
+    if alphabet_size == 2:
+        # Special case for binary alphabet
+        return max(0.0, conditional_entropy - 1.0)
+
+    denominator = safe_log(alphabet_size - 1, base)
+    if denominator == 0:
+        return 0.0
+
+    fano_bound = max(0.0, (conditional_entropy - 1.0) / denominator)
+
+    return min(1.0, fano_bound)  # Error probability cannot exceed 1
 
 
 def redundancy(p: List[float], code_lengths: List[float], base: float = 2.0) -> float:
